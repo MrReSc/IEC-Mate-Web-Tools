@@ -124,8 +124,8 @@
 
     textarea {
       width: 100%;
-      min-height: 6rem;
-      resize: vertical;
+      height: 6rem;
+      resize: none;
       border-radius: 4px;
       border: 1px solid var(--border-color);
       padding: 0.4rem 0.5rem;
@@ -133,6 +133,7 @@
       font-size: 0.95rem;
       background-color: var(--editor-bg);
       color: var(--editor-text);
+      overflow: auto;
     }
 
     .vars textarea {
@@ -199,6 +200,12 @@
       padding: 0.25rem 0.4rem;
       font-size: 0.93rem;
       font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+      background-color: var(--editor-bg);
+      color: var(--editor-text);
+    }
+    
+    input,
+    select {
       background-color: var(--editor-bg);
       color: var(--editor-text);
     }
@@ -362,8 +369,8 @@
       caret-color: var(--editor-text);
       height: 100%;
       min-height: 18rem;
-      overflow: auto;
       white-space: pre;
+      overflow: auto;
     }
 
     .code-input.overlay-active {
@@ -381,6 +388,7 @@
       border-radius: 4px;
       overflow: auto;
       white-space: pre;
+      overflow-wrap: normal;
       word-break: normal;
       pointer-events: none;
       z-index: 1;
@@ -407,14 +415,33 @@
       .st-operator { color: #8b6f00; }
     }
 
-    .ws-space {
+    .ws-space,
+    .ws-tab {
+      position: relative;
+      color: transparent;
+    }
+
+    .ws-space::after {
+      content: "·";
       color: rgba(128, 128, 128, 0.7);
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      text-align: center;
     }
 
     .ws-tab {
-      color: rgba(128, 128, 128, 0.85);
       display: inline-block;
-      min-width: 3ch;
+      width: 3ch;
+    }
+
+    .ws-tab::after {
+      content: "→";
+      color: rgba(128, 128, 128, 0.85);
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      text-align: center;
     }
 
     .footer-panel {
@@ -462,24 +489,24 @@
           Pro Zeile genau ein Wort oder Eintrag.
           In allen ausgefüllten Feldern muss die gleiche Anzahl Zeilen stehen.
         </p>
-        <div class="vars-group">
-          <div>
-            <label for="variable_1">Variablenliste 1</label>
-            <textarea id="variable_1" placeholder="Variablenliste hier einfügen..."></textarea>
+          <div class="vars-group">
+            <div>
+              <label for="variable_1">Variablenliste 1</label>
+              <textarea id="variable_1" placeholder="Hier Variablenliste einfügen..."></textarea>
+            </div>
+            <div>
+              <label for="variable_2">Variablenliste 2</label>
+              <textarea id="variable_2" placeholder="Hier Variablenliste einfügen..."></textarea>
+            </div>
+            <div>
+              <label for="variable_3">Variablenliste 3</label>
+              <textarea id="variable_3" placeholder="Hier Variablenliste einfügen..."></textarea>
+            </div>
+            <div>
+              <label for="variable_4">Variablenliste 4</label>
+              <textarea id="variable_4" placeholder="Hier Variablenliste einfügen..."></textarea>
+            </div>
           </div>
-          <div>
-            <label for="variable_2">Variablenliste 2</label>
-            <textarea id="variable_2" placeholder="Variablenliste hier einfügen..."></textarea>
-          </div>
-          <div>
-            <label for="variable_3">Variablenliste 3</label>
-            <textarea id="variable_3" placeholder="Variablenliste hier einfügen..."></textarea>
-          </div>
-          <div>
-            <label for="variable_4">Variablenliste 4</label>
-            <textarea id="variable_4" placeholder="Variablenliste hier einfügen..."></textarea>
-          </div>
-        </div>
 
         <div class="actions">
           <button id="clear-vars">Variablen leeren</button>
@@ -499,8 +526,7 @@
 
         <div class="editor-wrapper">
           <pre id="template-highlight" class="code-highlight" aria-hidden="true"></pre>
-          <textarea id="template" class="code-input"
-            wrap="off"
+          <textarea id="template" class="code-input" wrap="off"
             placeholder="Beispiel:&#10;const name = PLACEHOLDER_NAME;&#10;const wert = PLACEHOLDER_WERT;&#10;const farbe = PLACEHOLDER_FARBE;"></textarea>
         </div>
 
@@ -653,8 +679,8 @@
         return html;
       }
       return html
-        .replace(/ /g, "<span class=\"ws-space\">·</span>")
-        .replace(/\t/g, "<span class=\"ws-tab\">→</span>");
+        .replace(/ /g, "<span class=\"ws-space\"> </span>")
+        .replace(/\t/g, "<span class=\"ws-tab\">\t</span>");
     }
 
     function wrapToken(content, className) {
