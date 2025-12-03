@@ -75,21 +75,22 @@
     }
 
     .page {
-      max-width: 1300px;
+      width: 100%;
+      max-width: none;
       margin: 0 auto;
       padding: 1rem 1.5rem 2rem;
     }
 
     .layout {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.1fr);
+      grid-template-columns: minmax(360px, 400px) minmax(0, 1fr) minmax(0, 1fr);
       gap: 1rem;
-      align-items: flex-start;
+      align-items: stretch;
     }
 
     @media (max-width: 1200px) {
       .layout {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+        grid-template-columns: minmax(360px, 400px) minmax(0, 1fr);
       }
     }
 
@@ -105,6 +106,9 @@
       border-radius: 6px;
       padding: 0.75rem 0.8rem;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
     label {
@@ -132,8 +136,8 @@
     }
 
     .vars textarea {
-      background-color: var(--panel-bg);
-      color: var(--text-color);
+      background-color: var(--editor-bg);
+      color: var(--editor-text);
     }
 
     textarea:focus,
@@ -195,8 +199,8 @@
       padding: 0.25rem 0.4rem;
       font-size: 0.93rem;
       font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
-      background-color: var(--panel-bg);
-      color: var(--text-color);
+      background-color: var(--editor-bg);
+      color: var(--editor-text);
     }
 
     .actions {
@@ -338,7 +342,8 @@
     /* Syntax Highlight + Editor Overlay */
     .editor-wrapper {
       position: relative;
-      min-height: 9rem;
+      min-height: 18rem;
+      flex: 1;
     }
 
     .editor-wrapper textarea,
@@ -355,7 +360,10 @@
       background: transparent;
       color: var(--editor-text);
       caret-color: var(--editor-text);
-      min-height: 9rem;
+      height: 100%;
+      min-height: 18rem;
+      overflow: auto;
+      white-space: pre;
     }
 
     .code-input.overlay-active {
@@ -372,8 +380,8 @@
       color: var(--editor-text);
       border-radius: 4px;
       overflow: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
+      white-space: pre;
+      word-break: normal;
       pointer-events: none;
       z-index: 1;
     }
@@ -456,20 +464,20 @@
         </p>
         <div class="vars-group">
           <div>
-            <label for="variable_1">variable_1</label>
-            <textarea id="variable_1" placeholder="Beispiel&#10;Alpha&#10;Bravo&#10;Charlie"></textarea>
+            <label for="variable_1">Variablenliste 1</label>
+            <textarea id="variable_1" placeholder="Variablenliste hier einfügen..."></textarea>
           </div>
           <div>
-            <label for="variable_2">variable_2</label>
-            <textarea id="variable_2" placeholder="Beispiel&#10;X&#10;Y&#10;Z"></textarea>
+            <label for="variable_2">Variablenliste 2</label>
+            <textarea id="variable_2" placeholder="Variablenliste hier einfügen..."></textarea>
           </div>
           <div>
-            <label for="variable_3">variable_3</label>
-            <textarea id="variable_3" placeholder="Optional&#10;rot&#10;grün&#10;blau"></textarea>
+            <label for="variable_3">Variablenliste 3</label>
+            <textarea id="variable_3" placeholder="Variablenliste hier einfügen..."></textarea>
           </div>
           <div>
-            <label for="variable_4">variable_4</label>
-            <textarea id="variable_4" placeholder="Optional&#10;zusatz1&#10;zusatz2&#10;zusatz3"></textarea>
+            <label for="variable_4">Variablenliste 4</label>
+            <textarea id="variable_4" placeholder="Variablenliste hier einfügen..."></textarea>
           </div>
         </div>
 
@@ -479,7 +487,7 @@
       </div>
 
       <!-- Mitte: Editor und Platzhalter -->
-      <div class="panel">
+      <div class="panel editor-panel">
         <div class="editor-header">
           <div class="editor-label">
             <label for="template" class="panel-title">Codevorlage</label>
@@ -492,6 +500,7 @@
         <div class="editor-wrapper">
           <pre id="template-highlight" class="code-highlight" aria-hidden="true"></pre>
           <textarea id="template" class="code-input"
+            wrap="off"
             placeholder="Beispiel:&#10;const name = PLACEHOLDER_NAME;&#10;const wert = PLACEHOLDER_WERT;&#10;const farbe = PLACEHOLDER_FARBE;"></textarea>
         </div>
 
@@ -508,37 +517,37 @@
             <div class="placeholder-row">
               <input id="ph1-text" type="text" placeholder="Strg/Cmd+1 zum Befüllen">
               <select id="ph1-source">
-                <option value="variable_1">variable_1</option>
-                <option value="variable_2">variable_2</option>
-                <option value="variable_3">variable_3</option>
-                <option value="variable_4">variable_4</option>
+                <option value="variable_1">Variablenliste 1</option>
+                <option value="variable_2">Variablenliste 2</option>
+                <option value="variable_3">Variablenliste 3</option>
+                <option value="variable_4">Variablenliste 4</option>
               </select>
             </div>
             <div class="placeholder-row">
               <input id="ph2-text" type="text" placeholder="Strg/Cmd+2 zum Befüllen">
               <select id="ph2-source">
-                <option value="variable_1">variable_1</option>
-                <option value="variable_2">variable_2</option>
-                <option value="variable_3">variable_3</option>
-                <option value="variable_4">variable_4</option>
+                <option value="variable_1">Variablenliste 1</option>
+                <option value="variable_2">Variablenliste 2</option>
+                <option value="variable_3">Variablenliste 3</option>
+                <option value="variable_4">Variablenliste 4</option>
               </select>
             </div>
             <div class="placeholder-row">
               <input id="ph3-text" type="text" placeholder="Strg/Cmd+3 zum Befüllen">
               <select id="ph3-source">
-                <option value="variable_1">variable_1</option>
-                <option value="variable_2">variable_2</option>
-                <option value="variable_3">variable_3</option>
-                <option value="variable_4">variable_4</option>
+                <option value="variable_1">Variablenliste 1</option>
+                <option value="variable_2">Variablenliste 2</option>
+                <option value="variable_3">Variablenliste 3</option>
+                <option value="variable_4">Variablenliste 4</option>
               </select>
             </div>
             <div class="placeholder-row">
               <input id="ph4-text" type="text" placeholder="Strg/Cmd+4 zum Befüllen">
               <select id="ph4-source">
-                <option value="variable_1">variable_1</option>
-                <option value="variable_2">variable_2</option>
-                <option value="variable_3">variable_3</option>
-                <option value="variable_4">variable_4</option>
+                <option value="variable_1">Variablenliste 1</option>
+                <option value="variable_2">Variablenliste 2</option>
+                <option value="variable_3">Variablenliste 3</option>
+                <option value="variable_4">Variablenliste 4</option>
               </select>
             </div>
           </div>
@@ -576,7 +585,7 @@
 
   <div class="footer-panel">
     <p class="license-note">
-      Lizenz CC0 1.0 Public Domain Dedication. Dieser Generator wurde durch vibe coding erstellt. Hinweis: Der Generator kann unkontrolliert Dinge tun; ich habe nicht den ganzen Code gelesen.
+      Dieser Generator wurde durch vibe coding erstellt. Hinweis: Der Generator kann unkontrolliert Dinge tun; ich habe nicht den ganzen Code gelesen.
     </p>
   </div>
 </div>
