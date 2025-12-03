@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Whitespace Cleaner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg-color: #f3f3f3;
+      --text-color: #1e1e1e;
+      --panel-bg: #ffffff;
+      --border-color: #d0d0d0;
+      --accent-color: #007acc;
+      --accent-soft: rgba(0, 122, 204, 0.1);
+      --editor-bg: #ffffff;
+      --editor-text: #1e1e1e;
+      --output-bg: #f3f3f3;
+      --scrollbar-bg: #c8c8c8;
+      --scrollbar-thumb: #888888;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #1e1e1e;
+        --text-color: #d4d4d4;
+        --panel-bg: #252526;
+        --border-color: #3c3c3c;
+        --accent-color: #0e639c;
+        --accent-soft: rgba(14, 99, 156, 0.25);
+        --editor-bg: #1e1e1e;
+        --editor-text: #d4d4d4;
+        --output-bg: #1e1e1e;
+        --scrollbar-bg: #2a2a2a;
+        --scrollbar-thumb: #555555;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 115%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1rem;
+    }
+
+    h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.9rem;
+      letter-spacing: 0.03em;
+    }
+
+    h2 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1.1rem;
+      letter-spacing: 0.01em;
+    }
+
+    .page {
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.2rem 1.4rem 1.8rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hint {
+      font-size: 0.92rem;
+      opacity: 0.82;
+      margin: 0 0 0.8rem 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1rem;
+      align-items: stretch;
+      flex: 1;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.85rem 0.9rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0;
+      color: inherit;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .small-label {
+      font-size: 0.75rem;
+      opacity: 0.78;
+    }
+
+    textarea {
+      width: 100%;
+      resize: none;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      padding: 0.45rem 0.55rem;
+      font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+      font-size: 0.95rem;
+      background-color: var(--editor-bg);
+      color: var(--editor-text);
+      min-height: 18rem;
+      line-height: 1.4;
+    }
+
+    input[type="number"] {
+      width: 5rem;
+      padding: 0.3rem 0.4rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+      font-size: 0.95rem;
+      background-color: var(--editor-bg);
+      color: var(--editor-text);
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: 1px solid var(--accent-color);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .editor-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .indent-control {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.1rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-top: 0.2rem;
+    }
+
+    button {
+      border-radius: 4px;
+      border: 1px solid var(--accent-color);
+      background-color: var(--accent-color);
+      color: #ffffff;
+      padding: 0.38rem 0.9rem;
+      font-size: 0.92rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    button:hover {
+      filter: brightness(1.05);
+    }
+
+    button:active {
+      filter: brightness(0.95);
+    }
+
+    .primary-button {
+      background-color: #1f9a4b;
+      border-color: #1f9a4b;
+    }
+
+    .status-row {
+      min-height: 1.2rem;
+    }
+
+    .status {
+      font-size: 0.82rem;
+      min-height: 1.1em;
+    }
+
+    .status.error {
+      color: #c74e39;
+    }
+
+    .status.ok {
+      color: #6a9955;
+    }
+
+    .editor-wrapper {
+      position: relative;
+      flex: 1;
+      min-height: 18rem;
+    }
+
+    .editor-wrapper textarea,
+    .editor-wrapper pre {
+      font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+      font-size: 0.94rem;
+      line-height: 1.4;
+      tab-size: 3;
+    }
+
+    .code-input {
+      position: relative;
+      z-index: 2;
+      background: transparent;
+      color: var(--editor-text);
+      caret-color: var(--editor-text);
+      height: 100%;
+      min-height: 18rem;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .code-input.overlay-active {
+      color: transparent;
+      text-shadow: none;
+    }
+
+    .code-highlight {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 0.45rem 0.55rem;
+      background: var(--editor-bg);
+      color: var(--editor-text);
+      border-radius: 4px;
+      overflow: auto;
+      white-space: pre;
+      overflow-wrap: normal;
+      word-break: normal;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .code-highlight::selection {
+      background: transparent;
+    }
+
+    .output-shell {
+      background-color: var(--editor-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0.4rem 0.5rem;
+      max-height: 26rem;
+      overflow: auto;
+    }
+
+    .output-shell pre {
+      margin: 0;
+      padding: 0.35rem 0.4rem;
+      white-space: pre;
+      overflow: auto;
+      font-size: 0.94rem;
+    }
+
+    code {
+      font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+      white-space: pre;
+    }
+
+    .footer-panel {
+      margin-top: 1.1rem;
+      padding: 0.9rem 1rem;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .footer-note {
+      font-size: 0.85rem;
+      color: #777777;
+      margin: 0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .footer-note {
+        color: #9ca3af;
+      }
+    }
+
+    /* Token colors */
+    .st-keyword { color: #569cd6; }
+    .st-type { color: #4ec9b0; }
+    .st-number { color: #b5cea8; }
+    .st-string { color: #ce9178; }
+    .st-comment { color: #6a9955; }
+    .st-operator { color: #dcdcaa; }
+
+    @media (prefers-color-scheme: light) {
+      .st-keyword { color: #005cc5; }
+      .st-type { color: #0b9a83; }
+      .st-number { color: #216e39; }
+      .st-string { color: #9c2c2c; }
+      .st-comment { color: #3b7a57; }
+      .st-operator { color: #8b6f00; }
+    }
+
+    .ws-space,
+    .ws-tab {
+      position: relative;
+      color: transparent;
+    }
+
+    .ws-space::after {
+      content: "·";
+      color: rgba(128, 128, 128, 0.7);
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .ws-tab {
+      display: inline-block;
+      width: 3ch;
+    }
+
+    .ws-tab::after {
+      content: "→";
+      color: rgba(128, 128, 128, 0.85);
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Whitespace Cleaner</h1>
+    <p class="hint">
+      Füge links Structured Text ein und bereinige Leerzeichen, Einrückungen und Operator-Abstände. Die Ausgabe wird rechts mit Syntax-Highlighting angezeigt.
+    </p>
+
+    <div class="layout">
+      <div class="panel">
+        <div class="editor-header">
+          <div>
+            <label for="input-code" class="panel-title">Eingabe</label>
+            <span class="small-label">Syntax-Highlighting wie im Code Generator.</span>
+          </div>
+          <div class="indent-control">
+            <label for="indent-size" class="small-label">Einrückung</label>
+            <div>
+              <input id="indent-size" type="number" value="4" min="1" max="12" step="1"> <span class="small-label">Spaces</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="editor-wrapper">
+          <pre id="input-highlight" class="code-highlight" aria-hidden="true"></pre>
+          <textarea id="input-code" class="code-input" wrap="off" placeholder="Structured Text hier einfügen..."></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="format-btn" class="primary-button">Formatieren</button>
+          <button id="clear-btn">Leeren</button>
+        </div>
+        <div class="status-row">
+          <div id="status" class="status"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="editor-header">
+          <div>
+            <h2 class="panel-title">Ausgabe</h2>
+            <span class="small-label">Formatiertes Ergebnis inkl. Highlighting.</span>
+          </div>
+          <div class="actions">
+            <button id="copy-output">Ausgabe kopieren</button>
+          </div>
+        </div>
+        <div class="output-shell">
+          <pre><code id="output-code"></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-panel">
+      <p class="footer-note">
+        Hinweis: Formatter folgt den Regeln aus dem Projekt (Spaces nach Kommas, keine Leerzeichen am Zeilenende, saubere Einrückung).
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const ST_KEYWORDS = new Set([
+      "PROGRAM", "END_PROGRAM", "FUNCTION", "END_FUNCTION",
+      "FUNCTION_BLOCK", "END_FUNCTION_BLOCK",
+      "VAR", "VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_GLOBAL", "VAR_EXTERNAL", "END_VAR",
+      "IF", "THEN", "ELSE", "ELSIF", "END_IF",
+      "FOR", "TO", "BY", "DO", "END_FOR",
+      "WHILE", "END_WHILE",
+      "REPEAT", "UNTIL", "END_REPEAT",
+      "CASE", "OF", "END_CASE",
+      "RETURN", "EXIT",
+      "WITH", "AND", "OR", "XOR", "NOT", "MOD", "DIV",
+      "TYPE", "END_TYPE", "STRUCT", "END_STRUCT",
+      "METHOD", "END_METHOD", "PROPERTY", "END_PROPERTY",
+      "PRIVATE", "PUBLIC", "PROTECTED", "CONST"
+    ]);
+
+    const ST_TYPES = new Set([
+      "BOOL", "BYTE", "WORD", "DWORD", "LWORD",
+      "SINT", "INT", "DINT", "LINT",
+      "USINT", "UINT", "UDINT", "ULINT",
+      "REAL", "LREAL",
+      "STRING", "WSTRING",
+      "TIME", "DATE", "TIME_OF_DAY", "DATE_AND_TIME", "TOD", "DT"
+    ]);
+
+    function escapeHtml(str) {
+      return (str || "").replace(/[&<>"]/g, ch => {
+        switch (ch) {
+          case "&": return "&amp;";
+          case "<": return "&lt;";
+          case ">": return "&gt;";
+          case "\"": return "&quot;";
+          default: return ch;
+        }
+      });
+    }
+
+    function renderWhitespace(html, showWhitespace) {
+      if (!showWhitespace) {
+        return html;
+      }
+      return html
+        .replace(/ /g, "<span class=\"ws-space\"> </span>")
+        .replace(/\t/g, "<span class=\"ws-tab\">\t</span>");
+    }
+
+    function wrapToken(content, className) {
+      return `<span class="${className}">${content}</span>`;
+    }
+
+    function classifyToken(token) {
+      const upper = token.toUpperCase();
+      if (token.startsWith("(*") || token.startsWith("//")) {
+        return "st-comment";
+      }
+      if (token.startsWith("\"")) {
+        return "st-string";
+      }
+      if (ST_KEYWORDS.has(upper)) {
+        return "st-keyword";
+      }
+      if (ST_TYPES.has(upper)) {
+        return "st-type";
+      }
+      if (/^(?:\d[\d_]*(?:\.\d[\d_]*)?|(?:16#|2#|8#|10#)[0-9A-Fa-f_]+)$/.test(token)) {
+        return "st-number";
+      }
+      if (/^(:=|<=|>=|<>)$/.test(token)) {
+        return "st-operator";
+      }
+      return "";
+    }
+
+    function highlightStructuredText(source, options = {}) {
+      const showWhitespace = Boolean(options.showWhitespace);
+      const pieces = [];
+      const pattern = /(\(\*[\s\S]*?\*\)|\/\/[^\n]*|"(?:[^"\\]|\\.)*"|\b[A-Za-z_][A-Za-z0-9_]*\b|:=|<=|>=|<>|\b\d[\d_]*(?:\.\d[\d_]*)?\b|(?:16#|2#|8#|10#)[0-9A-Fa-f_]+)/g;
+      let lastIndex = 0;
+      source = source || "";
+
+      source.replace(pattern, (match, _g, offset) => {
+        if (offset > lastIndex) {
+          const plain = source.slice(lastIndex, offset);
+          pieces.push(renderWhitespace(escapeHtml(plain), showWhitespace));
+        }
+
+        const className = classifyToken(match);
+        const safe = renderWhitespace(escapeHtml(match), showWhitespace);
+        pieces.push(className ? wrapToken(safe, className) : safe);
+
+        lastIndex = offset + match.length;
+        return match;
+      });
+
+      if (lastIndex < source.length) {
+        const plain = source.slice(lastIndex);
+        pieces.push(renderWhitespace(escapeHtml(plain), showWhitespace));
+      }
+
+      return pieces.join("");
+    }
+
+    function lastNonSpaceChar(str) {
+      for (let i = str.length - 1; i >= 0; i--) {
+        const ch = str[i];
+        if (ch !== " " && ch !== "\t") {
+          return ch;
+        }
+      }
+      return "";
+    }
+
+    function spaceAroundWordOperators(text) {
+      return text.replace(/\s*\b(AND|OR|XOR|MOD|DIV)\b\s*/gi, (_, op) => " " + op.toUpperCase() + " ");
+    }
+
+    function spaceAroundSimpleOperators(text) {
+      const operatorSet = new Set(["+", "-", "*", "/", "<", ">"]);
+      let result = "";
+      let i = 0;
+      while (i < text.length) {
+        const ch = text[i];
+        if (!operatorSet.has(ch)) {
+          result += ch;
+          i++;
+          continue;
+        }
+
+        const prev = lastNonSpaceChar(result);
+        let j = i + 1;
+        while (j < text.length && text[j] === " ") {
+          j++;
+        }
+        const next = text[j] || "";
+        const isPrevOperand = /[A-Za-z0-9_)\]}]/.test(prev);
+        const isNextOperand = /[A-Za-z0-9_(\["]/.test(next);
+        const isBinary = isPrevOperand && isNextOperand;
+
+        if (isBinary) {
+          result = result.replace(/\s+$/g, "");
+          result += " " + ch + " ";
+          i = j;
+          continue;
+        }
+
+        result += ch;
+        i++;
+        if (ch === "-" || ch === "+") {
+          while (i < text.length && text[i] === " ") {
+            i++;
+          }
+        }
+      }
+      return result;
+    }
+
+    function formatCodeSegment(segment) {
+      if (!segment) {
+        return "";
+      }
+      let s = segment;
+      s = s.replace(/([A-Za-z_][A-Za-z0-9_]*)\s+\(/g, "$1(");
+      s = s.replace(/\s*,\s*/g, ", ");
+      s = s.replace(/, (\)|;|,)/g, ",$1");
+      s = s.replace(/\s*(:=|<=|>=|<>|=)\s*/g, " $1 ");
+      s = spaceAroundWordOperators(s);
+      s = spaceAroundSimpleOperators(s);
+      s = s.replace(/\(\s+/g, "(");
+      s = s.replace(/\s+\)/g, ")");
+      s = s.replace(/\s{2,}/g, " ");
+      return s.trim();
+    }
+
+    function formatLineContent(line, inBlockComment) {
+      let output = "";
+      let idx = 0;
+      let blockOpen = inBlockComment;
+
+      while (idx < line.length) {
+        if (blockOpen) {
+          const end = line.indexOf("*)", idx);
+          if (end === -1) {
+            output += line.slice(idx);
+            return { text: output, inBlockComment: true };
+          }
+          output += line.slice(idx, end + 2);
+          idx = end + 2;
+          blockOpen = false;
+          continue;
+        }
+
+        const nextBlock = line.indexOf("(*", idx);
+        const nextLineComment = line.indexOf("//", idx);
+        const nextString = line.indexOf("\"", idx);
+        const hits = [nextBlock, nextLineComment, nextString].filter(pos => pos >= 0);
+
+        if (hits.length === 0) {
+          output += formatCodeSegment(line.slice(idx));
+          break;
+        }
+
+        const next = Math.min.apply(null, hits);
+
+        if (nextString === next) {
+          output += formatCodeSegment(line.slice(idx, next));
+          let end = next + 1;
+          while (end < line.length) {
+            if (line[end] === "\"" && line[end + 1] === "\"") {
+              end += 2;
+              continue;
+            }
+            if (line[end] === "\"") {
+              end++;
+              break;
+            }
+            end++;
+          }
+          output += line.slice(next, end);
+          idx = end;
+          continue;
+        }
+
+        if (nextBlock === next) {
+          output += formatCodeSegment(line.slice(idx, nextBlock));
+          const end = line.indexOf("*)", nextBlock + 2);
+          if (end === -1) {
+            output += line.slice(nextBlock);
+            return { text: output, inBlockComment: true };
+          }
+          output += line.slice(nextBlock, end + 2);
+          idx = end + 2;
+          continue;
+        }
+
+        if (nextLineComment === next) {
+          output += formatCodeSegment(line.slice(idx, nextLineComment));
+          output += line.slice(nextLineComment);
+          break;
+        }
+      }
+
+      return { text: output, inBlockComment: blockOpen };
+    }
+
+    function shouldDedentFirst(upper) {
+      const list = [
+        "END_IF", "END_FOR", "END_WHILE", "END_REPEAT", "END_CASE",
+        "END_PROGRAM", "END_FUNCTION", "END_FUNCTION_BLOCK", "END_METHOD",
+        "END_PROPERTY", "END_TYPE", "END_STRUCT", "END_VAR",
+        "ELSIF", "ELSE", "UNTIL"
+      ];
+      return list.some(prefix => upper.startsWith(prefix));
+    }
+
+    function shouldIncreaseIndent(upper) {
+      if (/^IF\b.*\bTHEN\b/.test(upper)) return true;
+      if (/^ELSIF\b.*\bTHEN\b/.test(upper)) return true;
+      if (/^ELSE\b/.test(upper)) return true;
+      if (/^CASE\b/.test(upper)) return true;
+      if (/^FOR\b/.test(upper)) return true;
+      if (/^WHILE\b/.test(upper)) return true;
+      if (/^REPEAT\b/.test(upper)) return true;
+      if (/^VAR(_[A-Z]+)?\b/.test(upper)) return true;
+      if (/^STRUCT\b/.test(upper)) return true;
+      if (/^TYPE\b/.test(upper)) return true;
+      if (/^PROGRAM\b/.test(upper)) return true;
+      if (/^FUNCTION_BLOCK\b/.test(upper)) return true;
+      if (/^FUNCTION\b/.test(upper)) return true;
+      if (/^METHOD\b/.test(upper)) return true;
+      if (/^PROPERTY\b/.test(upper)) return true;
+      return false;
+    }
+
+    function formatStructuredText(source, indentSize) {
+      const indent = " ".repeat(Math.max(1, indentSize || 4));
+      const lines = (source || "").replace(/\r\n?/g, "\n").split("\n");
+      const formatted = [];
+      let indentLevel = 0;
+      let inBlockComment = false;
+
+      for (const rawLine of lines) {
+        const noTrailing = (rawLine || "").replace(/\s+$/, "");
+        if (noTrailing.trim() === "") {
+          formatted.push("");
+          continue;
+        }
+
+        const trimmed = noTrailing.trim();
+        const upper = trimmed.toUpperCase();
+
+        if (shouldDedentFirst(upper)) {
+          indentLevel = Math.max(0, indentLevel - 1);
+        }
+
+        const { text, inBlockComment: blockState } = formatLineContent(trimmed, inBlockComment);
+        inBlockComment = blockState;
+        formatted.push(indent.repeat(indentLevel) + text);
+
+        if (shouldIncreaseIndent(upper)) {
+          indentLevel += 1;
+        }
+      }
+
+      return formatted.join("\n");
+    }
+
+    function showStatus(message, isError) {
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = message || "";
+      statusEl.className = "status " + (isError ? "error" : "ok");
+    }
+
+    function renderInputHighlight() {
+      const textarea = document.getElementById("input-code");
+      const highlight = document.getElementById("input-highlight");
+      highlight.innerHTML = highlightStructuredText(textarea.value || "", { showWhitespace: true });
+    }
+
+    function syncInputScroll() {
+      const textarea = document.getElementById("input-code");
+      const highlight = document.getElementById("input-highlight");
+      highlight.scrollTop = textarea.scrollTop;
+      highlight.scrollLeft = textarea.scrollLeft;
+    }
+
+    function renderOutput(text) {
+      const code = document.getElementById("output-code");
+      code.innerHTML = highlightStructuredText(text, { showWhitespace: true });
+    }
+
+    const inputField = document.getElementById("input-code");
+    const inputHighlight = document.getElementById("input-highlight");
+    let lastFormatted = "";
+
+    if (inputField && inputHighlight) {
+      inputField.addEventListener("input", () => {
+        renderInputHighlight();
+        syncInputScroll();
+      });
+      inputField.addEventListener("scroll", syncInputScroll);
+      inputField.classList.add("overlay-active");
+      renderInputHighlight();
+      syncInputScroll();
+    }
+
+    document.getElementById("format-btn").addEventListener("click", () => {
+      const indentValue = parseInt(document.getElementById("indent-size").value, 10);
+      const indentSize = Number.isInteger(indentValue) && indentValue > 0 ? indentValue : 4;
+      const formatted = formatStructuredText(inputField.value || "", indentSize);
+      lastFormatted = formatted;
+      renderOutput(formatted);
+      showStatus("Code formatiert mit " + indentSize + " Spaces pro Ebene.", false);
+    });
+
+    document.getElementById("clear-btn").addEventListener("click", () => {
+      inputField.value = "";
+      lastFormatted = "";
+      renderInputHighlight();
+      syncInputScroll();
+      renderOutput("");
+      showStatus("Eingabe und Ausgabe wurden geleert.", false);
+    });
+
+    document.getElementById("copy-output").addEventListener("click", () => {
+      const textToCopy = lastFormatted;
+      if (!textToCopy) {
+        showStatus("Bitte zuerst formatieren.", true);
+        return;
+      }
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        showStatus("Ausgabe kopiert.", false);
+      }).catch(() => {
+        showStatus("Konnte nicht kopieren.", true);
+      });
+    });
+  </script>
+</body>
+</html>
