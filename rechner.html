@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Bitset Rechner 32 Bit</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 115%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e5e5e5;
+      color: #111111;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 40px auto;
+      padding: 28px 28px 36px 28px;
+      background: #f7f7f7;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 1.9rem;
+      letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+      margin: 0 0 24px 0;
+      font-size: 0.98rem;
+      color: #555555;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    @media (min-width: 720px) {
+      .inputs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field-bin {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 0.95rem;
+      color: #333333;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .input-row input {
+      flex: 1 1 auto;
+    }
+
+    .field input {
+      font-size: 1rem;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid #cccccc;
+      background: #ffffff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+      font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+      width: 100%;
+      color: #111111;
+    }
+
+    .field input:focus {
+      border-color: #007acc;
+      box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.18);
+      background: #ffffff;
+    }
+
+    .field input.invalid {
+      border-color: #b00020;
+      background: #ffecec;
+    }
+
+    .copy-btn {
+      flex: 0 0 auto;
+      padding: 9px 14px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      border: 1px solid #aaaaaa;
+      background: #e0e0e0;
+      cursor: pointer;
+      outline: none;
+      white-space: nowrap;
+      transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: #d4d4d4;
+      border-color: #888888;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .copy-btn:active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .error {
+      min-height: 1.1em;
+      font-size: 0.82rem;
+      color: #b00020;
+    }
+
+    .actions-row {
+      margin: 6px 0 26px 0;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .reset-btn {
+      padding: 9px 18px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      border: 1px solid #007acc;
+      background: #007acc;
+      color: #ffffff;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .reset-btn:hover {
+      background: #005f99;
+      border-color: #005f99;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .reset-btn:active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .bits-container {
+      margin-top: 10px;
+    }
+
+    .bits-header {
+      margin-bottom: 10px;
+    }
+
+    .bits-header-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 3px;
+    }
+
+    .bits-header-info {
+      font-size: 0.85rem;
+      color: #666666;
+    }
+
+    .bits-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 8px;
+    }
+
+    .bits-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .bit-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #999999;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      cursor: pointer;
+      user-select: none;
+      transition:
+        background-color 0.12s,
+        border-color 0.12s,
+        color 0.12s,
+        box-shadow 0.12s,
+        transform 0.08s;
+    }
+
+    .bit-circle.on {
+      background: #007acc;
+      border-color: #007acc;
+      color: #ffffff;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .bit-circle.off {
+      background: #ffffff;
+      color: #333333;
+    }
+
+    .bit-circle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.22);
+    }
+
+    .footer-note {
+      margin-top: 26px;
+      font-size: 0.85rem;
+      color: #777777;
+    }
+
+    .license-note {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #777777;
+    }
+
+    /* Dark Theme im VS Code Stil */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1e1e1e;
+        color: #d4d4d4;
+      }
+
+      .container {
+        background: #252526;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+        border: 1px solid #3c3c3c;
+      }
+
+      .subtitle {
+        color: #9ca3af;
+      }
+
+      .field label {
+        color: #d4d4d4;
+      }
+
+      .field input {
+        border-color: #3c3c3c;
+        background: #1e1e1e;
+        color: #d4d4d4;
+      }
+
+      .field input:focus {
+        border-color: #007acc;
+        box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.35);
+        background: #1e1e1e;
+      }
+
+      .field input.invalid {
+        background: #3c1414;
+      }
+
+      .error {
+        color: #fca5a5;
+      }
+
+      .bits-header-info {
+        color: #9ca3af;
+      }
+
+      .bits-grid {
+        gap: 22px;
+      }
+
+      .bit-circle.off {
+        border-color: #3c3c3c;
+        background: #1e1e1e;
+        color: #d4d4d4;
+      }
+
+      .bit-circle.on {
+        background: #0e639c;
+        border-color: #0e639c;
+        color: #ffffff;
+      }
+
+      .footer-note {
+        color: #9ca3af;
+      }
+
+      .license-note {
+        color: #9ca3af;
+      }
+
+      .copy-btn {
+        border-color: #3c3c3c;
+        background: #2d2d30;
+        color: #d4d4d4;
+      }
+
+      .copy-btn:hover {
+        background: #3e3e42;
+        border-color: #4b4b4f;
+      }
+
+      .reset-btn {
+        background: #0e639c;
+        border-color: #0e639c;
+        color: #ffffff;
+      }
+
+      .reset-btn:hover {
+        background: #1177bb;
+        border-color: #1177bb;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bitset Rechner 32 Bit</h1>
+    <p class="subtitle">
+      Eingabe in Dezimal, Hexadezimal oder Binär. Die anderen Darstellungen und die Bits 0 bis 31 werden automatisch aktualisiert.
+    </p>
+
+    <div class="inputs">
+      <div class="field field-dec">
+        <label for="decInput">Dezimal</label>
+        <div class="input-row">
+          <input id="decInput" type="text" autocomplete="off" inputmode="numeric">
+          <button type="button" class="copy-btn" data-copy-target="decInput">Kopieren</button>
+        </div>
+        <div id="decError" class="error"></div>
+      </div>
+
+      <div class="field field-hex">
+        <label for="hexInput">Hexadezimal</label>
+        <div class="input-row">
+          <input id="hexInput" type="text" autocomplete="off" spellcheck="false">
+          <button type="button" class="copy-btn" data-copy-target="hexInput">Kopieren</button>
+        </div>
+        <div id="hexError" class="error"></div>
+      </div>
+
+      <div class="field field-bin">
+        <label for="binInput">Binär</label>
+        <div class="input-row">
+          <input id="binInput" type="text" autocomplete="off" spellcheck="false">
+          <button type="button" class="copy-btn" data-copy-target="binInput">Kopieren</button>
+        </div>
+        <div id="binError" class="error"></div>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button type="button" id="resetBtn" class="reset-btn">Alle Werte zurücksetzen</button>
+    </div>
+
+    <div class="bits-container">
+      <div class="bits-header">
+        <div class="bits-header-title">Bits 0 bis 31</div>
+        <div class="bits-header-info">Kreis anklicken um Bit zu setzen oder zu löschen</div>
+      </div>
+      <div id="bitsGrid" class="bits-grid"></div>
+    </div>
+
+    <div class="footer-note">
+      Wertebereich 0 bis 4&nbsp;294&nbsp;967&nbsp;295 entspricht 16#00000000 bis 16#FFFFFFFF oder 32 Bits.
+    </div>
+    <div class="license-note">
+      Lizenz CC0 1.0 Public Domain Dedication. Nutzung frei und ohne Gewährleistung. Dieser Rechner wurde durch vibe coding erstellt.
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const decInput = document.getElementById("decInput");
+      const hexInput = document.getElementById("hexInput");
+      const binInput = document.getElementById("binInput");
+
+      const decError = document.getElementById("decError");
+      const hexError = document.getElementById("hexError");
+      const binError = document.getElementById("binError");
+
+      const bitsGrid = document.getElementById("bitsGrid");
+      const resetBtn = document.getElementById("resetBtn");
+
+      let currentValue = 0;
+      let isUpdating = false;
+
+      const bitCircles = [];
+
+      for (let row = 0; row < 4; row++) {
+        const rowEl = document.createElement("div");
+        rowEl.className = "bits-row";
+        bitsGrid.appendChild(rowEl);
+
+        for (let bit = row * 8; bit < row * 8 + 8; bit++) {
+          const circle = document.createElement("div");
+          circle.className = "bit-circle off";
+          circle.dataset.bit = String(bit);
+          circle.textContent = String(bit);
+          rowEl.appendChild(circle);
+          bitCircles.push(circle);
+        }
+      }
+
+      function clearErrors() {
+        [decError, hexError, binError].forEach(function (el) {
+          el.textContent = "";
+        });
+        [decInput, hexInput, binInput].forEach(function (el) {
+          el.classList.remove("invalid");
+        });
+      }
+
+      function setError(inputEl, errorEl, message) {
+        inputEl.classList.add("invalid");
+        errorEl.textContent = message;
+      }
+
+      function formatBinary32(value) {
+        const raw = (value >>> 0).toString(2).padStart(32, "0");
+        return raw.replace(/(.{4})/g, "$1 ").trim();
+      }
+
+      function formatHex8(value) {
+        return "16#" + (value >>> 0).toString(16).toUpperCase().padStart(8, "0");
+      }
+
+      function setValue(newValue, source) {
+        currentValue = newValue >>> 0;
+        updateFromValue(source);
+      }
+
+      function updateFromValue(source) {
+        isUpdating = true;
+        clearErrors();
+
+        if (source !== "dec") {
+          decInput.value = String(currentValue >>> 0);
+        }
+        if (source !== "hex") {
+          hexInput.value = formatHex8(currentValue);
+        }
+        if (source !== "bin") {
+          binInput.value = formatBinary32(currentValue);
+        }
+
+        isUpdating = false;
+        updateBits();
+      }
+
+      function updateBits() {
+        bitCircles.forEach(function (circle) {
+          const bit = Number(circle.dataset.bit);
+          const isSet = ((currentValue >>> bit) & 1) === 1;
+          circle.classList.toggle("on", isSet);
+          circle.classList.toggle("off", !isSet);
+        });
+      }
+
+      function parseDecimal(str) {
+        const trimmed = str.trim();
+        if (trimmed === "") {
+          return { ok: false, error: "Eingabe darf nicht leer sein" };
+        }
+        if (!/^[0-9]+$/.test(trimmed)) {
+          return { ok: false, error: "Nur Dezimalziffern 0 bis 9 zulässig" };
+        }
+        const value = Number(trimmed);
+        if (!Number.isFinite(value)) {
+          return { ok: false, error: "Wert ist zu gross" };
+        }
+        if (value < 0 || value > 0xFFFFFFFF) {
+          return { ok: false, error: "Nur 32 Bit Werte 0 bis 4294967295 zulässig" };
+        }
+        return { ok: true, value: value >>> 0 };
+      }
+
+      function parseHex(str) {
+        let trimmed = str.trim();
+        if (trimmed === "") {
+          return { ok: false, error: "Eingabe darf nicht leer sein" };
+        }
+
+        if (/^0x/i.test(trimmed)) {
+          trimmed = trimmed.slice(2);
+        } else if (/^16#/i.test(trimmed)) {
+          trimmed = trimmed.slice(3);
+        }
+
+        trimmed = trimmed.replace(/\s+/g, "");
+        if (trimmed === "") {
+          return { ok: false, error: "Keine Hexziffern gefunden" };
+        }
+        if (!/^[0-9a-fA-F]+$/.test(trimmed)) {
+          return { ok: false, error: "Nur Hexziffern 0 bis 9 und A bis F zulässig" };
+        }
+        if (trimmed.length > 8) {
+          return { ok: false, error: "Maximal 8 Hexziffern für 32 Bit zulässig" };
+        }
+        const value = parseInt(trimmed, 16);
+        if (!Number.isFinite(value)) {
+          return { ok: false, error: "Wert ist ungültig" };
+        }
+        return { ok: true, value: value >>> 0 };
+      }
+
+      function parseBinary(str) {
+        let trimmed = str.trim();
+        if (trimmed === "") {
+          return { ok: false, error: "Eingabe darf nicht leer sein" };
+        }
+        trimmed = trimmed.replace(/\s+/g, "");
+        if (!/^[01]+$/.test(trimmed)) {
+          return { ok: false, error: "Nur Binärziffern 0 und 1 zulässig" };
+        }
+        if (trimmed.length > 32) {
+          return { ok: false, error: "Maximal 32 Bits zulässig" };
+        }
+        const value = parseInt(trimmed, 2);
+        if (!Number.isFinite(value)) {
+          return { ok: false, error: "Wert ist ungültig" };
+        }
+        return { ok: true, value: value >>> 0 };
+      }
+
+      function handleInput(source) {
+        if (isUpdating) {
+          return;
+        }
+        clearErrors();
+        let result;
+
+        if (source === "dec") {
+          result = parseDecimal(decInput.value);
+          if (!result.ok) {
+            setError(decInput, decError, result.error);
+            return;
+          }
+        } else if (source === "hex") {
+          result = parseHex(hexInput.value);
+          if (!result.ok) {
+            setError(hexInput, hexError, result.error);
+            return;
+          }
+        } else if (source === "bin") {
+          result = parseBinary(binInput.value);
+          if (!result.ok) {
+            setError(binInput, binError, result.error);
+            return;
+          }
+        } else {
+          return;
+        }
+
+        setValue(result.value, source);
+      }
+
+      decInput.addEventListener("input", function () {
+        handleInput("dec");
+      });
+
+      hexInput.addEventListener("input", function () {
+        handleInput("hex");
+      });
+
+      binInput.addEventListener("input", function () {
+        handleInput("bin");
+      });
+
+      hexInput.addEventListener("blur", function () {
+        if (isUpdating) {
+          return;
+        }
+        if (hexInput.value.trim() === "") {
+          return;
+        }
+        handleInput("hex");
+        if (hexError.textContent === "") {
+          updateFromValue();
+        }
+      });
+
+      binInput.addEventListener("blur", function () {
+        if (isUpdating) {
+          return;
+        }
+        if (binInput.value.trim() === "") {
+          return;
+        }
+        handleInput("bin");
+        if (binError.textContent === "") {
+          updateFromValue();
+        }
+      });
+
+      bitsGrid.addEventListener("click", function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
+        if (!target.classList.contains("bit-circle")) {
+          return;
+        }
+        const bit = Number(target.dataset.bit);
+        if (!Number.isInteger(bit) || bit < 0 || bit > 31) {
+          return;
+        }
+        const mask = 1 << bit;
+        const newValue = (currentValue ^ mask) >>> 0;
+        setValue(newValue);
+      });
+
+      const copyButtons = document.querySelectorAll(".copy-btn");
+      copyButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const targetId = btn.dataset.copyTarget;
+          const input = document.getElementById(targetId);
+          if (!input) {
+            return;
+          }
+          const text = input.value;
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function () {});
+          } else {
+            const selection = window.getSelection();
+            const previousRange = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
+            input.select();
+            try {
+              document.execCommand("copy");
+            } catch (e) {}
+
+            if (selection) {
+              selection.removeAllRanges();
+              if (previousRange) {
+                selection.addRange(previousRange);
+              }
+            }
+          }
+        });
+      });
+
+      resetBtn.addEventListener("click", function () {
+        setValue(0);
+      });
+
+      setValue(0);
+    })();
+  </script>
+</body>
+</html>
