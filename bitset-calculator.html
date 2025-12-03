@@ -233,16 +233,19 @@
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.22);
     }
 
-    .footer-note {
-      margin-top: 26px;
-      font-size: 0.85rem;
-      color: #777777;
+    .footer-panel {
+      margin-top: 1.2rem;
+      padding: 0.9rem 1rem;
+      background: #f7f7f7;
+      border: 1px solid #cccccc;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
     }
 
     .license-note {
-      margin-top: 6px;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       color: #777777;
+      margin: 0;
     }
 
     /* Dark Theme im VS Code Stil */
@@ -306,8 +309,9 @@
         color: #ffffff;
       }
 
-      .footer-note {
-        color: #9ca3af;
+      .footer-panel {
+        background: #252526;
+        border: 1px solid #3c3c3c;
       }
 
       .license-note {
@@ -386,11 +390,10 @@
       <div id="bitsGrid" class="bits-grid"></div>
     </div>
 
-    <div class="footer-note">
-      Wertebereich 0 bis 4&nbsp;294&nbsp;967&nbsp;295 entspricht 16#00000000 bis 16#FFFFFFFF oder 32 Bits.
-    </div>
-    <div class="license-note">
-      Lizenz CC0 1.0 Public Domain Dedication. Nutzung frei und ohne Gewährleistung. Dieser Rechner wurde durch vibe coding erstellt.
+    <div class="footer-panel">
+      <p class="license-note">
+        Dieses Tool wurde von vibe coding erstellt. Nutzung und Ausgaben erfolgen in eigener Verantwortung; KI-generierter Code kann Fehler enthalten.
+      </p>
     </div>
   </div>
 
